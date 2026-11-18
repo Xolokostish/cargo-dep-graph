@@ -1,0 +1,2 @@
+package_name,source,test_mode,output_file,filter_substring
+serde,tests/test_graph.txt,on,graph.png,-sys
