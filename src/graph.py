@@ -3,6 +3,11 @@
 from typing import Callable, Dict, List, Set
 
 
+def _is_filtered(name: str, filter_sub: str) -> bool:
+    """Проверяет, нужно ли фильтровать пакет."""
+    return bool(filter_sub and filter_sub in name)
+
+
 def build_graph(
     root: str,
     fetcher: Callable[[str], List[str]],
@@ -12,26 +17,36 @@ def build_graph(
     graph: Dict[str, List[str]] = {}
     stack: List[str] = [root]
     visited: Set[str] = set()
+
     while stack:
         node = stack.pop()
         if node in visited:
             continue
+        
         visited.add(node)
-        if filter_sub and filter_sub in node:
+
+        # Обработка фильтрации
+        if _is_filtered(node, filter_sub):
             graph[node] = []
             continue
+
+        # Получение и фильтрация зависимостей
         try:
             deps = fetcher(node)
         except Exception:
             deps = []
-        filtered = [
-            d for d in deps
-            if not (filter_sub and filter_sub in d)
+
+        filtered_deps = [
+            d for d in deps 
+            if not _is_filtered(d, filter_sub)
         ]
-        graph[node] = filtered
-        for dep in filtered:
+        
+        graph[node] = filtered_deps
+
+        for dep in filtered_deps:
             if dep not in visited:
                 stack.append(dep)
+
     return graph
 
 
