@@ -26,7 +26,7 @@ def topological_sort(
     graph: Dict[str, List[str]],
     root: str,
 ) -> List[str]:
-    """Возвращает порядок загрузки зависимостей (топосорт).
+    """Возвращает порядок загрузки зависимостей.
 
     Использует алгоритм Кана. Сначала загружаются пакеты
     без зависимостей (листья графа).
@@ -55,7 +55,7 @@ def topological_sort(
     while queue:
         node = queue.pop(0)
         result.append(node)
-        
+
         # Обновляем степени соседей в обратном графе
         for dependent in reverse_graph.get(node, []):
             in_degree[dependent] -= 1

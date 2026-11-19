@@ -4,16 +4,42 @@ from typing import Callable, Dict, List, Set
 
 
 def _is_filtered(name: str, filter_sub: str) -> bool:
-    """Проверяет, нужно ли фильтровать пакет по подстроке.
+    """Проверяет необходимость фильтрации пакета.
 
     Args:
         name: Имя пакета.
+        filter_sub: Подстрока для поиска.
+
+    Returns:
+        True, если пакет нужно исключить.
+    """
+    return bool(filter_sub and filter_sub in name)
+
+
+def _get_safe_deps(
+    node: str,
+    fetcher: Callable[[str], List[str]],
+    filter_sub: str,
+) -> List[str]:
+    """Безопасно получает и фильтрует зависимости узла.
+
+    Args:
+        node: Текущий узел графа.
+        fetcher: Функция получения зависимостей.
         filter_sub: Подстрока для фильтрации.
 
     Returns:
-        True, если пакет должен быть исключен.
+        Список отфильтрованных зависимостей.
     """
-    return bool(filter_sub and filter_sub in name)
+    try:
+        deps = fetcher(node)
+    except Exception:
+        deps = []
+
+    return [
+        d for d in deps
+        if not _is_filtered(d, filter_sub)
+    ]
 
 
 def build_graph(
@@ -21,7 +47,7 @@ def build_graph(
     fetcher: Callable[[str], List[str]],
     filter_sub: str = "",
 ) -> Dict[str, List[str]]:
-    """Строит граф зависимостей через итеративный DFS.
+    """Строит граф зависимостей итеративным DFS.
 
     Args:
         root: Корневой пакет.
@@ -39,25 +65,18 @@ def build_graph(
         node = stack.pop()
         if node in visited:
             continue
-        
+
         visited.add(node)
 
-        # Обработка фильтрации корневого узла
+        # Пропускаем отфильтрованные узлы
         if _is_filtered(node, filter_sub):
             graph[node] = []
             continue
 
-        # Получение и фильтрация зависимостей
-        try:
-            deps = fetcher(node)
-        except Exception:
-            deps = []
-
-        filtered_deps = [
-            d for d in deps 
-            if not _is_filtered(d, filter_sub)
-        ]
-        
+        # Получаем и добавляем соседей
+        filtered_deps = _get_safe_deps(
+            node, fetcher, filter_sub
+        )
         graph[node] = filtered_deps
 
         for dep in filtered_deps:
@@ -71,7 +90,7 @@ def load_test_graph(path: str) -> Dict[str, List[str]]:
     """Загружает тестовый граф из текстового файла.
 
     Args:
-        path: Путь к файлу с описанием графа.
+        path: Путь к файлу описания графа.
 
     Returns:
         Словарь графа зависимостей.
