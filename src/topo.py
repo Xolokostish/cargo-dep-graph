@@ -6,14 +6,7 @@ from typing import Dict, List
 def _build_reverse_graph(
     graph: Dict[str, List[str]]
 ) -> Dict[str, List[str]]:
-    """Строит обратный граф для алгоритма Кана.
-
-    Args:
-        graph: Исходный граф зависимостей.
-
-    Returns:
-        Обратный граф {узел: [зависящие_узлы]}.
-    """
+    """Строит обратный граф для алгоритма Кана."""
     reverse: Dict[str, List[str]] = {n: [] for n in graph}
     for node, deps in graph.items():
         for dep in deps:
@@ -26,27 +19,13 @@ def topological_sort(
     graph: Dict[str, List[str]],
     root: str,
 ) -> List[str]:
-    """Возвращает порядок загрузки зависимостей.
-
-    Использует алгоритм Кана. Сначала загружаются пакеты
-    без зависимостей (листья графа).
-
-    Args:
-        graph: Словарь {пакет: [зависимости]}.
-        root: Корневой пакет (для контекста).
-
-    Returns:
-        Список пакетов в порядке загрузки.
-    """
-    # Считаем входящие степени (количество зависимостей)
+    """Возвращает порядок загрузки зависимостей (топосорт)."""
     in_degree: Dict[str, int] = {
         n: len(deps) for n, deps in graph.items()
     }
 
-    # Строим обратный граф для обновления степеней
     reverse_graph = _build_reverse_graph(graph)
 
-    # Инициализация очереди (узлы без зависимостей)
     queue = [
         n for n in in_degree if in_degree[n] == 0
     ]
@@ -56,7 +35,6 @@ def topological_sort(
         node = queue.pop(0)
         result.append(node)
 
-        # Обновляем степени соседей в обратном графе
         for dependent in reverse_graph.get(node, []):
             in_degree[dependent] -= 1
             if in_degree[dependent] == 0:
