@@ -4,7 +4,15 @@ from typing import Callable, Dict, List, Set
 
 
 def _is_filtered(name: str, filter_sub: str) -> bool:
-    """Проверяет, нужно ли фильтровать пакет."""
+    """Проверяет, нужно ли фильтровать пакет по подстроке.
+
+    Args:
+        name: Имя пакета.
+        filter_sub: Подстрока для фильтрации.
+
+    Returns:
+        True, если пакет должен быть исключен.
+    """
     return bool(filter_sub and filter_sub in name)
 
 
@@ -13,7 +21,16 @@ def build_graph(
     fetcher: Callable[[str], List[str]],
     filter_sub: str = "",
 ) -> Dict[str, List[str]]:
-    """Строит граф зависимостей через итеративный DFS."""
+    """Строит граф зависимостей через итеративный DFS.
+
+    Args:
+        root: Корневой пакет.
+        fetcher: Функция получения зависимостей.
+        filter_sub: Подстрока для фильтрации.
+
+    Returns:
+        Словарь {пакет: [зависимости]}.
+    """
     graph: Dict[str, List[str]] = {}
     stack: List[str] = [root]
     visited: Set[str] = set()
@@ -25,7 +42,7 @@ def build_graph(
         
         visited.add(node)
 
-        # Обработка фильтрации
+        # Обработка фильтрации корневого узла
         if _is_filtered(node, filter_sub):
             graph[node] = []
             continue
@@ -51,7 +68,14 @@ def build_graph(
 
 
 def load_test_graph(path: str) -> Dict[str, List[str]]:
-    """Загружает тестовый граф из файла."""
+    """Загружает тестовый граф из текстового файла.
+
+    Args:
+        path: Путь к файлу с описанием графа.
+
+    Returns:
+        Словарь графа зависимостей.
+    """
     graph: Dict[str, List[str]] = {}
     with open(path, "r", encoding="utf-8") as f:
         for line in f:

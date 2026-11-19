@@ -6,7 +6,14 @@ from typing import Dict, List
 def _build_reverse_graph(
     graph: Dict[str, List[str]]
 ) -> Dict[str, List[str]]:
-    """Строит обратный граф для алгоритма Кана."""
+    """Строит обратный граф для алгоритма Кана.
+
+    Args:
+        graph: Исходный граф зависимостей.
+
+    Returns:
+        Обратный граф {узел: [зависящие_узлы]}.
+    """
     reverse: Dict[str, List[str]] = {n: [] for n in graph}
     for node, deps in graph.items():
         for dep in deps:
@@ -19,13 +26,24 @@ def topological_sort(
     graph: Dict[str, List[str]],
     root: str,
 ) -> List[str]:
-    """Возвращает порядок загрузки зависимостей."""
-    # Считаем входящие степени
+    """Возвращает порядок загрузки зависимостей (топосорт).
+
+    Использует алгоритм Кана. Сначала загружаются пакеты
+    без зависимостей (листья графа).
+
+    Args:
+        graph: Словарь {пакет: [зависимости]}.
+        root: Корневой пакет (для контекста).
+
+    Returns:
+        Список пакетов в порядке загрузки.
+    """
+    # Считаем входящие степени (количество зависимостей)
     in_degree: Dict[str, int] = {
         n: len(deps) for n, deps in graph.items()
     }
 
-    # Строим обратный граф
+    # Строим обратный граф для обновления степеней
     reverse_graph = _build_reverse_graph(graph)
 
     # Инициализация очереди (узлы без зависимостей)
